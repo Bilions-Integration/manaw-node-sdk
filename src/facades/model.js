@@ -1,22 +1,24 @@
 let axios = require('axios')
-let https = require('https')
-let env = require('dotenv').config()
-const FormData = require('form-data')
+let { isNode } = require('browser-or-node')
+if (isNode) {
+  const FormData = require('form-data')
+}
 
 class Model {
   constructor() {
-    let baseUrl = process.env.MANAW_BASE_URL
-    if (baseUrl) {
-      baseUrl = baseUrl
-    } else {
-      baseUrl = 'https://api.manawstore.com/v1'
+    if (isNode) {
+      let https = require('https')
+      const httpsAgent = new https.Agent({
+        rejectUnauthorized: false,
+      })
+      axios.defaults.httpsAgent = httpsAgent
     }
-    const httpsAgent = new https.Agent({
-      rejectUnauthorized: false,
-    })
-    axios.defaults.httpsAgent = httpsAgent
-    axios.defaults.baseURL = baseUrl
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + process.env.MANAW_API_KEY
+  }
+
+  credential({ authorization, url }) {
+    axios.defaults.baseURL = url
+    axios.defaults.headers.common['Authorization'] = 'Bearer ' + authorization
+    return this
   }
 
   async get(params) {
@@ -35,11 +37,7 @@ class Model {
   async create(params) {
     try {
       let fd = this.getParams(params)
-      let res = await axios.post(this.route, fd, {
-        headers: {
-          ...fd.getHeaders(),
-        },
-      })
+      let res = await axios.post(this.route, fd, this.extraParams(fd))
       return res.data
     } catch (error) {
       if (error.response) {
@@ -53,11 +51,7 @@ class Model {
   async update(params, id) {
     try {
       let fd = this.getParams(params)
-      let res = await axios.post(this.route + '/' + id + '?_method=PUT', fd, {
-        headers: {
-          ...fd.getHeaders(),
-        },
-      })
+      let res = await axios.post(this.route + '/' + id + '?_method=PUT', fd, this.extraParams(fd))
       return res.data
     } catch (error) {
       if (error.response) {
@@ -88,6 +82,18 @@ class Model {
       fd.append(p, value)
     }
     return fd
+  }
+
+  extraParams(fd) {
+    if (isNode) {
+      return {
+        headers: {
+          ...fd.getHeaders(),
+        },
+      }
+    } else {
+      return null
+    }
   }
 }
 
