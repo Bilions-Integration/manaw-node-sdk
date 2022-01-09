@@ -6,7 +6,7 @@ class App extends Model {
    *
    * @var {string} route
    */
-  route = 'categories'
+  route = 'customers'
 
   constructor() {
     super()

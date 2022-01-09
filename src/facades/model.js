@@ -5,6 +5,9 @@ if (isNode) {
 }
 
 class Model {
+  /**
+   * set up http agent for node js
+   */
   constructor() {
     if (isNode) {
       let https = require('https')
@@ -14,13 +17,24 @@ class Model {
       axios.defaults.httpsAgent = httpsAgent
     }
   }
-
+  /**
+   * request credential
+   *
+   * @param {authorization, url} params
+   * @returns
+   */
   credential({ authorization, url }) {
     axios.defaults.baseURL = url
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + authorization
     return this
   }
 
+  /**
+   * get records from api
+   *
+   * @param {page, limit, keyword} params
+   * @returns
+   */
   async get(params) {
     try {
       let res = await axios.get(this.route, { params })
@@ -34,6 +48,12 @@ class Model {
     }
   }
 
+  /**
+   * create a record
+   *
+   * @param {object} params
+   * @returns
+   */
   async create(params) {
     try {
       let fd = this.getParams(params)
@@ -48,6 +68,13 @@ class Model {
     }
   }
 
+  /**
+   * update a record
+   *
+   * @param {object} params
+   * @param {integer} id
+   * @returns
+   */
   async update(params, id) {
     try {
       let fd = this.getParams(params)
@@ -62,6 +89,12 @@ class Model {
     }
   }
 
+  /**
+   * Delete a record
+   *
+   * @param {integer} id
+   * @returns
+   */
   async delete(id) {
     try {
       let res = await axios.post(this.route + '/' + id)
@@ -75,15 +108,29 @@ class Model {
     }
   }
 
+  /**
+   * setup a form data param to sent api
+   * since some api required file update feature
+   * @param {object} params
+   * @returns
+   */
   getParams(params) {
     const fd = new FormData()
     for (let p in params) {
       let value = params[p]
-      fd.append(p, value)
+      if (value) {
+        fd.append(p, value)
+      }
     }
     return fd
   }
 
+  /**
+   * Node js required associated headers to sent through api
+   *
+   * @param {FormData} fd
+   * @returns
+   */
   extraParams(fd) {
     if (isNode) {
       return {
